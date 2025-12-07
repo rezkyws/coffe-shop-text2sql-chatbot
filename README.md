@@ -40,48 +40,34 @@ uv run etl_coffe_shop.py
 uv run server.py
 ```
 
-## Project Structure
+## Key Components
 
-```
-text-to-sql-chatbot/
-├── .env.example              # Environment variables template
-├── .gitignore               # Git ignore file
-├── pyproject.toml           # Python project configuration
-├── README.md                # This file
-├── schema.sql               # Database schema
-├── server.py                # FastAPI application entry point
-├── etl_coffe_shop.py        # ETL script for sample data
-├── app/
-│   ├── __init__.py
-│   ├── main.py              # FastAPI app configuration
-│   ├── api/
-│   │   ├── deps.py          # FastAPI dependencies
-│   │   └── routes/          # API endpoints
-│   │       ├── __init__.py
-│   │       ├── chat.py      # Chat endpoint
-│   │       └── health.py    # Health check endpoint
-│   ├── core/
-│   │   ├── config.py        # Application configuration
-│   │   ├── database.py      # Database connection
-│   │   ├── llm_client.py    # OpenAI API client
-│   │   ├── memory_manager.py # Conversation memory management
-│   │   ├── query_processor.py # LLM reasoning engine
-│   │   └── vector_store.py  # Vector database operations
-│   ├── models/
-│   │   ├── database.py      # Database models
-│   │   └── schemas.py       # Pydantic schemas
-│   └── services/
-│       ├── __init__.py
-│       ├── clarification_service.py # Query clarification
-│       ├── retrieval_service.py    # Vector similarity search
-│       ├── schema_extractor.py     # Database schema extraction
-│       └── sql_executor.py         # SQL query execution
-└── data/                    # Sample CSV data files
-    ├── customer.csv
-    ├── product.csv
-    ├── sales_outlet.csv
-    └── ...
-```
+### Core Modules
+- **`memory_manager.py`**: Handles conversation memory with summarization and context management
+- **`query_processor.py`**: LLM reasoning engine that determines action sequences
+- **`vector_store.py`**: Manages pgvector operations with HNSW indexing for similarity search
+- **`llm_client.py`**: OpenAI API client wrapper with error handling
+
+### Services
+- **`sql_executor.py`**: Executes SQL queries with retry mechanisms and safety checks
+- **`schema_extractor.py`**: Extracts and formats database schema information
+- **`retrieval_service.py`**: Searches for similar questions in the vector store
+- **`clarification_service.py`**: Handles ambiguous queries and requests user clarification
+
+### API Endpoints
+- **`/chat`**: Main chat endpoint for natural language queries
+- **`/health`**: Health check endpoint
+
+## Architecture
+
+The chatbot follows a multi-step reasoning process:
+
+1. **Query Analysis**: Analyzes the user's natural language query
+2. **Similarity Search**: Searches vector store for similar past questions
+3. **Schema Retrieval**: Extracts relevant database schema information
+4. **SQL Generation**: Uses LLM to generate appropriate SQL queries
+5. **Execution**: Safely executes SQL with retry mechanisms
+6. **Response Formatting**: Formats results for user-friendly display
 
 ## Development
 
