@@ -1,13 +1,5 @@
 # Text-to-SQL Chatbot
 
-## Features
-
-- **Natural Language to SQL**: Converts user questions into SQL queries using LLM reasoning
-- **Vector Similarity Search**: Finds similar past questions using pgvector with HNSW indexing
-- **Memory Management**: Maintains conversation context with long-term and short-term memory
-- **Intelligent Clarification**: Asks for clarification when queries are ambiguous
-- **Coffee Shop Dataset**: Pre-loaded with coffee shop sales data for demonstration
-
 ## Setup
 
 ### Prerequisites
@@ -90,35 +82,6 @@ text-to-sql-chatbot/
     ├── sales_outlet.csv
     └── ...
 ```
-
-## Key Components
-
-### Core Modules
-- **`memory_manager.py`**: Handles conversation memory with summarization and context management
-- **`query_processor.py`**: LLM reasoning engine that determines action sequences
-- **`vector_store.py`**: Manages pgvector operations with HNSW indexing for similarity search
-- **`llm_client.py`**: OpenAI API client wrapper with error handling
-
-### Services
-- **`sql_executor.py`**: Executes SQL queries with retry mechanisms and safety checks
-- **`schema_extractor.py`**: Extracts and formats database schema information
-- **`retrieval_service.py`**: Searches for similar questions in the vector store
-- **`clarification_service.py`**: Handles ambiguous queries and requests user clarification
-
-### API Endpoints
-- **`/chat`**: Main chat endpoint for natural language queries
-- **`/health`**: Health check endpoint
-
-## Architecture
-
-The chatbot follows a multi-step reasoning process:
-
-1. **Query Analysis**: Analyzes the user's natural language query
-2. **Similarity Search**: Searches vector store for similar past questions
-3. **Schema Retrieval**: Extracts relevant database schema information
-4. **SQL Generation**: Uses LLM to generate appropriate SQL queries
-5. **Execution**: Safely executes SQL with retry mechanisms
-6. **Response Formatting**: Formats results for user-friendly display
 
 ## Development
 
