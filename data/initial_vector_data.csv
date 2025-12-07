@@ -1,0 +1,96 @@
+question,query
+"Produce a table with the following columns: customer_id, customer_first_name, customer_email, and transaction_date which has the total line_item_amount the same with the total line_item_amount of user with customer_email 'Charissa@Integer.us' and transaction_date at April 20th, 2019. Sort it with the latest transaction_date on top","WITH target_amount AS (
+    SELECT SUM(fs.line_item_amount) as reference_amount
+    FROM fact_sales fs
+    JOIN dim_customer dc ON fs.customer_id = dc.customer_id
+    JOIN dim_date dd ON fs.date_id = dd.date_id
+    WHERE dc.customer_email = 'Charissa@Integer.us'
+    AND dd.full_date = '2019-04-20'
+),
+customer_daily_totals AS (
+    SELECT 
+        fs.customer_id,
+        dd.full_date,
+        SUM(fs.line_item_amount) as daily_total
+    FROM fact_sales fs
+    JOIN dim_date dd ON fs.date_id = dd.date_id
+    GROUP BY fs.customer_id, dd.full_date
+)
+SELECT DISTINCT
+    dc.customer_id,
+    dc.customer_first_name,
+    dc.customer_email,
+    cdt.full_date as transaction_date
+FROM dim_customer dc
+JOIN customer_daily_totals cdt ON dc.customer_id = cdt.customer_id
+WHERE cdt.daily_total = (SELECT reference_amount FROM target_amount)
+ORDER BY cdt.full_date DESC;"
+"Produce a table with the following columns: product_type, total quantity and status_sold, for transaction_date from April 6th, 2019 to April 14th, 2019. Sort it from the largest to the smallest.
+For status_sold column please apply the following rules:
+If total quantity more than or equal to 2000 then 'High Sold'
+If total quantity more than or equal to 1000 but less than 2000 then 'Medium Sold'
+If total quantity less than 1000 then 'Low Sold'","SELECT 
+    dp.product_type,
+    SUM(fs.quantity) as total_quantity,
+    CASE 
+        WHEN SUM(fs.quantity) >= 2000 THEN 'High Sold'
+        WHEN SUM(fs.quantity) >= 1000 THEN 'Medium Sold'
+        ELSE 'Low Sold'
+    END as status_sold
+FROM dim_product dp
+JOIN fact_sales fs ON dp.product_id = fs.product_id
+JOIN dim_date dd ON fs.date_id = dd.date_id
+WHERE dd.full_date BETWEEN '2019-04-06' AND '2019-04-14'
+GROUP BY dp.product_type
+ORDER BY total_quantity DESC;"
+"Produce a table with the following columns: product_type and total quantity sold. Show all product_type for transaction_date at April 2nd, 2019, if total total quantity sold is empty (no transaction) then fill it with 0. Sort it based on the largest to smallest total quantity sold","SELECT 
+    dp.product_type,
+    COALESCE(SUM(fs.quantity), 0) as total_quantity_sold
+FROM dim_product dp
+LEFT JOIN fact_sales fs ON dp.product_id = fs.product_id
+LEFT JOIN dim_date dd ON fs.date_id = dd.date_id AND dd.full_date = '2019-04-02'
+GROUP BY dp.product_type
+ORDER BY total_quantity_sold DESC;"
+"Produce a table with the following columns: customer_id, customer_first_name, and customer_email which has the largest total quantity for each transaction date from April 12nd, 2019 to April 20th, 2019. Sort it with the latest date on top","WITH customer_daily_totals AS (
+    SELECT 
+        dd.full_date as transaction_date,
+        dc.customer_id,
+        dc.customer_first_name,
+        dc.customer_email,
+        SUM(fs.quantity) as total_quantity
+    FROM dim_customer dc
+    JOIN fact_sales fs ON dc.customer_id = fs.customer_id
+    JOIN dim_date dd ON fs.date_id = dd.date_id
+    WHERE dd.full_date BETWEEN '2019-04-12' AND '2019-04-20'
+    AND dc.customer_id != 0
+    GROUP BY dd.full_date, dc.customer_id, dc.customer_first_name, dc.customer_email
+),
+ranked_customers AS (
+    SELECT 
+        transaction_date,
+        customer_id,
+        customer_first_name,
+        customer_email,
+        total_quantity,
+        ROW_NUMBER() OVER (PARTITION BY transaction_date ORDER BY total_quantity DESC) as rn
+    FROM customer_daily_totals
+)
+SELECT 
+    customer_id,
+    customer_first_name,
+    customer_email,
+    transaction_date
+FROM ranked_customers
+WHERE rn = 1
+ORDER BY transaction_date DESC;"
+"Produce a table with the following columns: product_id, product. Show only 10 products with the largest total quantity for transaction_date from April 11th, 2019 to April 13rd, 2019. Sort it from the largest to the lowest total quantity","SELECT 
+    dp.product_id,
+    dp.product_name as product,
+    SUM(fs.quantity) as total_quantity
+FROM dim_product dp
+JOIN fact_sales fs ON dp.product_id = fs.product_id
+JOIN dim_date dd ON fs.date_id = dd.date_id
+WHERE dd.full_date BETWEEN '2019-04-11' AND '2019-04-13'
+GROUP BY dp.product_id, dp.product_name
+ORDER BY total_quantity DESC
+LIMIT 10;"
